@@ -1,8 +1,8 @@
 package main
 
 import (
-	triggerHook "github.com/VladislavPav/trigger-hook"
 	"github.com/gin-gonic/gin"
+	"github.com/pvelx/triggerHook"
 	"net/http"
 )
 
