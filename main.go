@@ -1,37 +1,33 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/pvelx/triggerHook"
-	"net/http"
+	"github.com/pvelx/triggerHookExample/proto"
+	"github.com/pvelx/triggerHookExample/task_server"
+	"google.golang.org/grpc"
+	"log"
+	"net"
 )
 
-var router = gin.Default()
-var scheduler = triggerHook.Default()
+var tasksDeferredService = triggerHook.Default()
+
+const (
+	port = ":50051"
+)
 
 func main() {
+	tasksDeferredService.SetTransport(NewTransportAmqp())
+	go tasksDeferredService.Run()
 
-	scheduler.SetTransport(NewTransportAmqp())
-	go scheduler.Run()
+	taskServer := task_server.New(tasksDeferredService)
 
-	router.POST("/task", func(c *gin.Context) {
-		var taskRequest taskRequest
-		if err := c.ShouldBindJSON(&taskRequest); err != nil {
-			c.JSON(http.StatusInternalServerError, "Server error")
-			return
-		}
-		if err := taskRequest.Validate(); err != nil {
-			c.JSON(http.StatusBadRequest, "Validation error")
-			return
-		}
-
-		task, e := scheduler.Create(taskRequest.NextExecTime)
-		if e != nil {
-			c.JSON(http.StatusInternalServerError, "Something wrong")
-			return
-		}
-
-		c.JSON(http.StatusOK, task)
-	})
-	router.Run(":8083")
+	lis, err := net.Listen("tcp", port)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+	s := grpc.NewServer()
+	proto.RegisterTaskServer(s, taskServer)
+	if err := s.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
 }
