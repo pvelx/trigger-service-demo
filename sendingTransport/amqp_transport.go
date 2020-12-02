@@ -1,11 +1,11 @@
-package main
+package sendingTransport
 
 import (
 	"github.com/pvelx/triggerHook/contracts"
 	"github.com/pvelx/triggerHook/domain"
 )
 
-func NewTransportAmqp() *amqpTransport {
+func NewAmqpTransport() *amqpTransport {
 	return &amqpTransport{}
 }
 

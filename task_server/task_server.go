@@ -6,14 +6,14 @@ import (
 	"github.com/pvelx/triggerHookExample/proto"
 )
 
-func New(tasksDeferredService contracts.SchedulerInterface) proto.TaskServer {
+func New(tasksDeferredService contracts.TasksDeferredInterface) proto.TaskServer {
 	return &taskServer{
 		tasksDeferredService: tasksDeferredService,
 	}
 }
 
 type taskServer struct {
-	tasksDeferredService contracts.SchedulerInterface
+	tasksDeferredService contracts.TasksDeferredInterface
 	proto.UnimplementedTaskServer
 }
 

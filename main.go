@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/pvelx/triggerHook"
 	"github.com/pvelx/triggerHookExample/proto"
+	"github.com/pvelx/triggerHookExample/sendingTransport"
 	"github.com/pvelx/triggerHookExample/task_server"
 	"google.golang.org/grpc"
 	"log"
@@ -16,7 +17,7 @@ const (
 )
 
 func main() {
-	tasksDeferredService.SetTransport(NewTransportAmqp())
+	tasksDeferredService.SetTransport(sendingTransport.NewAmqpTransport())
 	go tasksDeferredService.Run()
 
 	taskServer := task_server.New(tasksDeferredService)
