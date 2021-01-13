@@ -1,34 +1,70 @@
 package main
 
 import (
-	"github.com/pvelx/triggerHook"
-	"github.com/pvelx/triggerHookExample/proto"
-	"github.com/pvelx/triggerHookExample/sendingTransport"
-	"github.com/pvelx/triggerHookExample/task_server"
-	"google.golang.org/grpc"
+	"encoding/json"
+	"github.com/pvelx/triggerHook/domain"
+	"github.com/streadway/amqp"
 	"log"
-	"net"
 )
-
-var tasksDeferredService = triggerHook.Default()
 
 const (
 	port = ":50051"
 )
 
 func main() {
-	tasksDeferredService.SetTransport(sendingTransport.NewAmqpTransport())
-	go tasksDeferredService.Run()
 
-	taskServer := task_server.New(tasksDeferredService)
-
-	lis, err := net.Listen("tcp", port)
+	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		log.Fatalf("Dial: %s", err)
 	}
-	s := grpc.NewServer()
-	proto.RegisterTaskServer(s, taskServer)
-	if err := s.Serve(lis); err != nil {
+	defer conn.Close()
+
+	channel, err := conn.Channel()
+	if err != nil {
+		log.Fatalf("Error open channel:%v", err)
+	}
+
+	transport := func(task domain.Task) {
+		taskJson, err := json.Marshal(task)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if err = channel.Publish(
+			"test-exchange", // publish to an exchange
+			"",              // routing to 0 or more queues
+			true,            // mandatory
+			false,           // immediate
+			amqp.Publishing{
+				Headers:         amqp.Table{},
+				ContentType:     "application/json",
+				ContentEncoding: "",
+				Body:            taskJson,
+				DeliveryMode:    amqp.Transient, // 1=non-persistent, 2=persistent
+				Priority:        0,              // 0-9
+			},
+		); err != nil {
+			log.Fatalf("Exchange Publish: %s", err)
+		}
+	}
+
+	monitoring := NewMonitoring()
+	tasksDeferredService := BuildTriggerHook(monitoring, transport)
+	taskServer := NewTaskServer(tasksDeferredService)
+
+	go func() {
+		if err := tasksDeferredService.Run(); err != nil {
+			log.Fatalf("failed run trigger hook: %v", err)
+		}
+	}()
+
+	go func() {
+		if err := monitoring.Run(); err != nil {
+			log.Fatalf("failed run monitoring: %v", err)
+		}
+	}()
+
+	if err := RunGrpcServer(taskServer); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
 }
