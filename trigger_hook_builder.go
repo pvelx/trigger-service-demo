@@ -5,15 +5,13 @@ import (
 	"github.com/pvelx/triggerHook"
 	"github.com/pvelx/triggerHook/connection"
 	"github.com/pvelx/triggerHook/contracts"
-	"github.com/pvelx/triggerHook/domain"
 	"github.com/pvelx/triggerHook/error_service"
 	"github.com/pvelx/triggerHook/monitoring_service"
-	"github.com/pvelx/triggerHook/sender_service"
 	"path"
 	"time"
 )
 
-func BuildTriggerHook(monitoring *Monitoring, transport func(domain.Task)) contracts.TasksDeferredInterface {
+func BuildTriggerHook(monitoring *Monitoring) contracts.TasksDeferredInterface {
 
 	eventHandlers := make(map[contracts.Level]func(event contracts.EventError))
 	baseFormat := "%s MESSAGE:%s METHOD:%s FILE:%s:%d EXTRA:%v\n"
@@ -73,9 +71,6 @@ func BuildTriggerHook(monitoring *Monitoring, transport func(domain.Task)) contr
 		MonitoringServiceOptions: monitoring_service.Options{
 			PeriodMeasure: 5 * time.Second,
 			Subscriptions: subscriptions,
-		},
-		SenderServiceOptions: sender_service.Options{
-			Transport: transport,
 		},
 	})
 
