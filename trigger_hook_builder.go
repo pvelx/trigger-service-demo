@@ -57,19 +57,17 @@ func BuildTriggerHook(monitoring *Monitoring) contracts.TasksDeferredInterface {
 
 	tasksDeferredService := triggerHook.Build(triggerHook.Config{
 		Connection: connection.Options{
-			User:         "root",
-			Password:     "secret",
-			Host:         "127.0.0.1:3306",
-			DbName:       "test_db",
-			MaxOpenConns: 30,
-			MaxIdleConns: 30,
+			User:     "root",
+			Password: "secret",
+			Host:     "127.0.0.1:3306",
+			DbName:   "test_db",
 		},
 		ErrorServiceOptions: error_service.Options{
 			Debug:         false,
 			EventHandlers: eventHandlers,
 		},
 		MonitoringServiceOptions: monitoring_service.Options{
-			PeriodMeasure: 5 * time.Second,
+			PeriodMeasure: time.Second,
 			Subscriptions: subscriptions,
 		},
 	})

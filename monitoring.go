@@ -35,7 +35,7 @@ func (m *Monitoring) Run() error {
 	for {
 		bp, err := client.NewBatchPoints(client.BatchPointsConfig{
 			Database:  "trigger_hook",
-			Precision: "s",
+			Precision: "ms",
 		})
 		if err != nil {
 			return err

@@ -6,7 +6,9 @@ import (
 )
 
 const (
-	port = ":50051"
+	port     = ":50051"
+	rabbitMq = "amqp://guest:guest@localhost:5672/"
+	queue    = "task"
 )
 
 func main() {
@@ -20,24 +22,23 @@ func main() {
 		}
 	}()
 
-	for w := 0; w < 5; w++ {
-		go func() {
-			addr := "amqp://guest:guest@localhost:5672/"
-			queue := New("task", addr)
-			for {
-				result := tasksDeferredService.Consume()
-				taskJson, err := json.Marshal(result.Task())
-				if err != nil {
-					log.Fatal(err)
-				}
-				if err := queue.Push(taskJson); err != nil {
-					log.Println("the task was not sent")
-					result.Rollback()
-				}
-				result.Confirm()
+	queue := New(queue, rabbitMq)
+	go func() {
+		for {
+			result := tasksDeferredService.Consume()
+			taskJson, err := json.Marshal(result.Task())
+			if err != nil {
+				log.Fatal(err)
 			}
-		}()
-	}
+
+			if err := queue.Push(taskJson); err != nil {
+				log.Println("the task was not sent")
+				result.Rollback()
+			}
+
+			result.Confirm()
+		}
+	}()
 
 	go func() {
 		if err := monitoring.Run(); err != nil {
