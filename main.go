@@ -1,37 +1,65 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/pvelx/triggerHook"
-	"net/http"
+	"encoding/json"
+	"github.com/pvelx/triggerHook/connection"
+	"log"
+	"os"
 )
 
-var router = gin.Default()
-var scheduler = triggerHook.Default()
+var (
+	host     = os.Getenv("SERVER_HOST")
+	rabbitMq = os.Getenv("MESSENGER_TRANSPORT_DSN")
+	queue    = os.Getenv("QUEUE_NAME")
+	exchange = os.Getenv("EXCHANGE_NAME")
+
+	mysqlUser     = os.Getenv("DATABASE_USER")
+	mysqlPassword = os.Getenv("DATABASE_PASSWORD")
+	mysqlHost     = os.Getenv("DATABASE_HOST")
+	mysqlDbName   = os.Getenv("DATABASE_NAME")
+)
 
 func main() {
-
-	scheduler.SetTransport(NewTransportAmqp())
-	go scheduler.Run()
-
-	router.POST("/task", func(c *gin.Context) {
-		var taskRequest taskRequest
-		if err := c.ShouldBindJSON(&taskRequest); err != nil {
-			c.JSON(http.StatusInternalServerError, "Server error")
-			return
-		}
-		if err := taskRequest.Validate(); err != nil {
-			c.JSON(http.StatusBadRequest, "Validation error")
-			return
-		}
-
-		task, e := scheduler.Create(taskRequest.NextExecTime)
-		if e != nil {
-			c.JSON(http.StatusInternalServerError, "Something wrong")
-			return
-		}
-
-		c.JSON(http.StatusOK, task)
+	monitoring := NewMonitoring()
+	tasksDeferredService := BuildTriggerHook(monitoring, connection.Options{
+		User:     mysqlUser,
+		Password: mysqlPassword,
+		Host:     mysqlHost,
+		DbName:   mysqlDbName,
 	})
-	router.Run(":8083")
+	taskServer := NewTaskServer(tasksDeferredService)
+
+	go func() {
+		if err := tasksDeferredService.Run(); err != nil {
+			log.Fatalf("failed run trigger hook: %v", err)
+		}
+	}()
+
+	queue := New(queue, rabbitMq)
+	go func() {
+		for {
+			result := tasksDeferredService.Consume()
+			taskJson, err := json.Marshal(result.Task())
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			if err := queue.Push(taskJson); err != nil {
+				log.Println("the task was not sent")
+				result.Rollback()
+			}
+
+			result.Confirm()
+		}
+	}()
+
+	go func() {
+		if err := monitoring.Run(); err != nil {
+			log.Fatalf("failed run monitoring: %v", err)
+		}
+	}()
+
+	if err := RunGrpcServer(taskServer); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
 }
