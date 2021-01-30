@@ -9,7 +9,7 @@ import (
 
 func RunGrpcServer(taskServer proto.TaskServer) error {
 
-	lis, err := net.Listen("tcp", port)
+	lis, err := net.Listen("tcp", host)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}

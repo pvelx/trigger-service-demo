@@ -1,10 +1,18 @@
 package main
 
 import (
+	"log"
+	"os"
+	"time"
+
 	"github.com/influxdata/influxdb/client/v2"
 	"github.com/pvelx/triggerHook/contracts"
-	"log"
-	"time"
+)
+
+var (
+	influxDbDns      = os.Getenv("INFLUX_DB_DNS")
+	influxDbUsername = os.Getenv("INFLUX_DB_USERNAME")
+	influxDbPassword = os.Getenv("INFLUX_DB_PASSWORD")
 )
 
 var sampleSize = 1000
@@ -17,9 +25,9 @@ type Monitoring struct {
 
 func NewMonitoring() *Monitoring {
 	c, err := client.NewHTTPClient(client.HTTPConfig{
-		Addr:     "http://localhost:8086",
-		Username: "monitor",
-		Password: "secret",
+		Addr:     influxDbDns,
+		Username: influxDbUsername,
+		Password: influxDbPassword,
 	})
 	if err != nil {
 		log.Fatalln("Error: ", err)

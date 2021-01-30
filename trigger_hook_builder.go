@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func BuildTriggerHook(monitoring *Monitoring) contracts.TasksDeferredInterface {
+func BuildTriggerHook(monitoring *Monitoring, conn connection.Options) contracts.TasksDeferredInterface {
 
 	eventHandlers := make(map[contracts.Level]func(event contracts.EventError))
 	baseFormat := "%s MESSAGE:%s METHOD:%s FILE:%s:%d EXTRA:%v\n"
@@ -56,12 +56,7 @@ func BuildTriggerHook(monitoring *Monitoring) contracts.TasksDeferredInterface {
 	}
 
 	tasksDeferredService := triggerHook.Build(triggerHook.Config{
-		Connection: connection.Options{
-			User:     "root",
-			Password: "secret",
-			Host:     "127.0.0.1:3306",
-			DbName:   "test_db",
-		},
+		Connection: conn,
 		ErrorServiceOptions: error_service.Options{
 			Debug:         false,
 			EventHandlers: eventHandlers,

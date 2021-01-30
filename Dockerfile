@@ -6,4 +6,6 @@ COPY ./ /app
 
 RUN go mod download
 
-ENTRYPOINT go run main.go
+RUN make build
+
+CMD ["/app/main"]
