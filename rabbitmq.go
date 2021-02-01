@@ -249,8 +249,8 @@ func (session *Session) UnsafePush(data []byte) error {
 	}
 
 	err := session.channel.Publish(
-		"",           // Exchange
-		session.name, // Routing key
+		session.name, // Exchange
+		"",           // Routing key
 		true,         // Mandatory
 		false,        // Immediate
 		amqp.Publishing{

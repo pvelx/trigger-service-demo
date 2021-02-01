@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/pvelx/triggerHook/connection"
+	"github.com/pvelx/triggerhook/connection"
 	"log"
 	"os"
 )
@@ -10,7 +10,6 @@ import (
 var (
 	host     = os.Getenv("SERVER_HOST")
 	rabbitMq = os.Getenv("MESSENGER_TRANSPORT_DSN")
-	queue    = os.Getenv("QUEUE_NAME")
 	exchange = os.Getenv("EXCHANGE_NAME")
 
 	mysqlUser     = os.Getenv("DATABASE_USER")
@@ -35,11 +34,17 @@ func main() {
 		}
 	}()
 
-	queue := New(queue, rabbitMq)
+	queue := New(exchange, rabbitMq)
 	go func() {
 		for {
 			result := tasksDeferredService.Consume()
-			taskJson, err := json.Marshal(result.Task())
+			message := struct {
+				TaskId string `json:"taskId"`
+			}{
+				result.Task().Id,
+			}
+
+			taskJson, err := json.Marshal(message)
 			if err != nil {
 				log.Fatal(err)
 			}

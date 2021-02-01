@@ -2,16 +2,16 @@ package main
 
 import (
 	"fmt"
-	"github.com/pvelx/triggerHook"
-	"github.com/pvelx/triggerHook/connection"
-	"github.com/pvelx/triggerHook/contracts"
-	"github.com/pvelx/triggerHook/error_service"
-	"github.com/pvelx/triggerHook/monitoring_service"
+	"github.com/pvelx/triggerhook"
+	"github.com/pvelx/triggerhook/connection"
+	"github.com/pvelx/triggerhook/contracts"
+	"github.com/pvelx/triggerhook/error_service"
+	"github.com/pvelx/triggerhook/monitoring_service"
 	"path"
 	"time"
 )
 
-func BuildTriggerHook(monitoring *Monitoring, conn connection.Options) contracts.TasksDeferredInterface {
+func BuildTriggerHook(monitoring *Monitoring, conn connection.Options) contracts.TriggerHookInterface {
 
 	eventHandlers := make(map[contracts.Level]func(event contracts.EventError))
 	baseFormat := "%s MESSAGE:%s METHOD:%s FILE:%s:%d EXTRA:%v\n"
@@ -39,15 +39,15 @@ func BuildTriggerHook(monitoring *Monitoring, conn connection.Options) contracts
 
 	subscriptions := make(map[contracts.Topic]func(event contracts.MeasurementEvent))
 	for _, topic := range []contracts.Topic{
-		contracts.SpeedOfPreloading,
-		contracts.SpeedOfCreating,
-		contracts.CountOfAllTasks,
+		contracts.PreloadingRate,
+		contracts.CreatingRate,
+		contracts.All,
 		contracts.Preloaded,
-		contracts.SpeedOfConfirmation,
-		contracts.CountOfWaitingForSending,
+		contracts.ConfirmationRate,
+		contracts.WaitingForSending,
 		contracts.WaitingForConfirmation,
-		contracts.SpeedOfSending,
-		contracts.SpeedOfDeleting,
+		contracts.SendingRate,
+		contracts.DeletingRate,
 	} {
 		topic := topic
 		subscriptions[topic] = func(event contracts.MeasurementEvent) {
@@ -55,7 +55,7 @@ func BuildTriggerHook(monitoring *Monitoring, conn connection.Options) contracts
 		}
 	}
 
-	tasksDeferredService := triggerHook.Build(triggerHook.Config{
+	tasksDeferredService := triggerhook.Build(triggerhook.Config{
 		Connection: conn,
 		ErrorServiceOptions: error_service.Options{
 			Debug:         false,
