@@ -2,28 +2,23 @@ package main
 
 import (
 	"log"
-	"os"
 	"time"
 
 	"github.com/influxdata/influxdb/client/v2"
 	"github.com/pvelx/triggerhook/contracts"
 )
 
-var (
-	influxDbDns      = os.Getenv("INFLUX_DB_DNS")
-	influxDbUsername = os.Getenv("INFLUX_DB_USERNAME")
-	influxDbPassword = os.Getenv("INFLUX_DB_PASSWORD")
-)
-
 var sampleSize = 1000
 var chPointCap = 10000
+var periodSending = 5 * time.Second
 
 type Monitoring struct {
+	database   string
 	connection client.Client
 	chPoint    chan *client.Point
 }
 
-func NewMonitoring() *Monitoring {
+func NewMonitoring(influxDbDns, influxDbUsername, influxDbPassword, influxDbName string) *Monitoring {
 	c, err := client.NewHTTPClient(client.HTTPConfig{
 		Addr:     influxDbDns,
 		Username: influxDbUsername,
@@ -34,6 +29,7 @@ func NewMonitoring() *Monitoring {
 	}
 
 	return &Monitoring{
+		database:   influxDbName,
 		connection: c,
 		chPoint:    make(chan *client.Point, chPointCap),
 	}
@@ -42,13 +38,13 @@ func NewMonitoring() *Monitoring {
 func (m *Monitoring) Run() error {
 	for {
 		bp, err := client.NewBatchPoints(client.BatchPointsConfig{
-			Database:  "trigger_hook",
+			Database:  m.database,
 			Precision: "ms",
 		})
 		if err != nil {
 			return err
 		}
-		expire := time.After(5 * time.Second)
+		expire := time.After(periodSending)
 		for {
 			select {
 			case point := <-m.chPoint:
@@ -83,7 +79,7 @@ func (m *Monitoring) AddMeasurement(name string, event contracts.MeasurementEven
 		event.Time,
 	)
 	if err != nil {
-		log.Fatalln("Error: ", err)
+		log.Println("Error: ", err)
 	}
 
 	m.chPoint <- point

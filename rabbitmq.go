@@ -37,8 +37,6 @@ var (
 	errShutdown      = errors.New("session is shutting down")
 )
 
-// New creates a new consumer state instance, and automatically
-// attempts to connect to the server.
 func New(name string, addr string) *Session {
 	session := Session{
 		logger: log.New(os.Stdout, "", log.LstdFlags),
@@ -49,8 +47,6 @@ func New(name string, addr string) *Session {
 	return &session
 }
 
-// handleReconnect will wait for a connection error on
-// notifyConnClose, and then continuously attempt to reconnect.
 func (session *Session) handleReconnect(addr string) {
 	for {
 		session.isReady = false
@@ -75,7 +71,6 @@ func (session *Session) handleReconnect(addr string) {
 	}
 }
 
-// connect will create a new AMQP connection
 func (session *Session) connect(addr string) (*amqp.Connection, error) {
 	conn, err := amqp.Dial(addr)
 
@@ -88,8 +83,6 @@ func (session *Session) connect(addr string) (*amqp.Connection, error) {
 	return conn, nil
 }
 
-// handleReconnect will wait for a channel error
-// and then continuously attempt to re-initialize both channels
 func (session *Session) handleReInit(conn *amqp.Connection) bool {
 	for {
 		session.isReady = false
@@ -119,7 +112,6 @@ func (session *Session) handleReInit(conn *amqp.Connection) bool {
 	}
 }
 
-// init will initialize channel & declare queue
 func (session *Session) init(conn *amqp.Connection) error {
 	ch, err := conn.Channel()
 
@@ -132,71 +124,20 @@ func (session *Session) init(conn *amqp.Connection) error {
 	if err != nil {
 		return err
 	}
-	_, err = ch.QueueDeclare(
-		session.name,
-		true,  // Durable
-		false, // Delete when unused
-		false, // Exclusive
-		false, // No-wait
-		nil,
-	)
-
-	if err != nil {
-		return err
-	}
 
 	session.changeChannel(ch)
 	session.isReady = true
 	log.Println("Setup!")
 
-	/*
-		if err := channel.ExchangeDeclare(
-			a.config.Create.ExchangeName,
-			a.config.Create.ExchangeType,
-			true,
-			false,
-			false,
-			false,
-			nil,
-		); err != nil {
-			return errors.Wrap(err, "failed to declare exchange")
-		}
-
-		if _, err := channel.QueueDeclare(
-			a.config.Create.QueueName,
-			true,
-			false,
-			false,
-			false,
-			amqp.Table{"x-queue-mode": "lazy"},
-		); err != nil {
-			return errors.Wrap(err, "failed to declare queue")
-		}
-
-		if err := channel.QueueBind(
-			a.config.Create.QueueName,
-			a.config.Create.RoutingKey,
-			a.config.Create.ExchangeName,
-			false,
-			nil,
-		); err != nil {
-			return errors.Wrap(err, "failed to bind queue")
-		}
-
-	*/
 	return nil
 }
 
-// changeConnection takes a new connection to the queue,
-// and updates the close listener to reflect this.
 func (session *Session) changeConnection(connection *amqp.Connection) {
 	session.connection = connection
 	session.notifyConnClose = make(chan *amqp.Error)
 	session.connection.NotifyClose(session.notifyConnClose)
 }
 
-// changeChannel takes a new channel to the queue,
-// and updates the channel listeners to reflect this.
 func (session *Session) changeChannel(channel *amqp.Channel) {
 	session.channel = channel
 	session.notifyChanClose = make(chan *amqp.Error)
@@ -205,11 +146,6 @@ func (session *Session) changeChannel(channel *amqp.Channel) {
 	session.channel.NotifyPublish(session.notifyConfirm)
 }
 
-// Push will push data onto the queue, and wait for a confirm.
-// If no confirms are received until within the resendTimeout,
-// it continuously re-sends messages until a confirm is received.
-// This will block until the server sends a confirm. Errors are
-// only returned if the push action itself fails, see UnsafePush.
 func (session *Session) Push(data []byte) error {
 	if !session.isReady {
 		return errors.New("failed to push: not connected")
@@ -228,21 +164,14 @@ func (session *Session) Push(data []byte) error {
 		select {
 		case confirm := <-session.notifyConfirm:
 			if confirm.Ack {
-				//session.logger.Println("Push confirmed!")
 				return nil
 			} else {
-				//session.logger.Println("Push error confirmed!")
 			}
 		case <-time.After(resendDelay):
 		}
-		//session.logger.Println("Push didn't confirm. Retrying...")
 	}
 }
 
-// UnsafePush will push to the queue without checking for
-// confirmation. It returns an error if it fails to connect.
-// No guarantees are provided for whether the server will
-// recieve the message.
 func (session *Session) UnsafePush(data []byte) error {
 	if !session.isReady {
 		return errNotConnected
@@ -264,7 +193,6 @@ func (session *Session) UnsafePush(data []byte) error {
 	return err
 }
 
-// Close will cleanly shutdown the channel and connection.
 func (session *Session) Close() error {
 	if !session.isReady {
 		return errAlreadyClosed

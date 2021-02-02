@@ -16,10 +16,15 @@ var (
 	mysqlPassword = os.Getenv("DATABASE_PASSWORD")
 	mysqlHost     = os.Getenv("DATABASE_HOST")
 	mysqlDbName   = os.Getenv("DATABASE_NAME")
+
+	influxDbDns      = os.Getenv("INFLUX_DB_DNS")
+	influxDbUsername = os.Getenv("INFLUX_DB_USERNAME")
+	influxDbPassword = os.Getenv("INFLUX_DB_PASSWORD")
+	influxDbName     = os.Getenv("INFLUX_DB_NAME")
 )
 
 func main() {
-	monitoring := NewMonitoring()
+	monitoring := NewMonitoring(influxDbDns, influxDbUsername, influxDbPassword, influxDbName)
 	tasksDeferredService := BuildTriggerHook(monitoring, connection.Options{
 		User:     mysqlUser,
 		Password: mysqlPassword,
