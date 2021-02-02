@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/influxdata/influxdb/client/v2"
-	"github.com/pvelx/triggerHook/contracts"
+	"github.com/pvelx/triggerhook/contracts"
 )
 
 var (

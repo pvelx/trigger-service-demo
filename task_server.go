@@ -2,12 +2,12 @@ package main
 
 import (
 	"context"
-	"github.com/pvelx/triggerHook/contracts"
-	"github.com/pvelx/triggerHook/domain"
-	"github.com/pvelx/triggerHookExample/proto"
+	"github.com/pvelx/triggerServiceDemo/proto"
+	"github.com/pvelx/triggerhook/contracts"
+	"github.com/pvelx/triggerhook/domain"
 )
 
-func NewTaskServer(tasksDeferredService contracts.TasksDeferredInterface) proto.TaskServer {
+func NewTaskServer(tasksDeferredService contracts.TriggerHookInterface) proto.TaskServer {
 	return &taskServer{
 		tasksDeferredService: tasksDeferredService,
 	}
@@ -15,7 +15,7 @@ func NewTaskServer(tasksDeferredService contracts.TasksDeferredInterface) proto.
 
 type taskServer struct {
 	proto.UnimplementedTaskServer
-	tasksDeferredService contracts.TasksDeferredInterface
+	tasksDeferredService contracts.TriggerHookInterface
 }
 
 func (s *taskServer) Create(ctx context.Context, req *proto.Request) (*proto.Response, error) {
