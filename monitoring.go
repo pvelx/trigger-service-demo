@@ -11,6 +11,7 @@ import (
 var sampleSize = 1000
 var chPointCap = 10000
 var periodSending = 5 * time.Second
+var precision = "ms"
 
 type Monitoring struct {
 	database   string
@@ -25,7 +26,7 @@ func NewMonitoring(influxDbDns, influxDbUsername, influxDbPassword, influxDbName
 		Password: influxDbPassword,
 	})
 	if err != nil {
-		log.Fatalln("Error: ", err)
+		log.Fatalln("error: ", err)
 	}
 
 	return &Monitoring{
@@ -39,7 +40,7 @@ func (m *Monitoring) Run() error {
 	for {
 		bp, err := client.NewBatchPoints(client.BatchPointsConfig{
 			Database:  m.database,
-			Precision: "ms",
+			Precision: precision,
 		})
 		if err != nil {
 			return err
@@ -61,9 +62,8 @@ func (m *Monitoring) Run() error {
 
 	done:
 		if len(bp.Points()) > 0 {
-			err = m.connection.Write(bp)
-			if err != nil {
-				return err
+			if err = m.connection.Write(bp); err != nil {
+				log.Println("error writing batch to influxdb: ", err)
 			}
 		}
 	}
