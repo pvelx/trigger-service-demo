@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/pvelx/triggerServiceDemo/proto"
+	"github.com/pvelx/trigger-service-demo/proto"
 	"google.golang.org/grpc"
 	"log"
 	"net"
