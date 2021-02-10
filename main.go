@@ -51,7 +51,7 @@ func main() {
 
 			taskJson, err := json.Marshal(message)
 			if err != nil {
-				log.Fatal(err)
+				log.Println(err)
 			}
 
 			if err := queue.Push(taskJson); err != nil {
