@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"github.com/pvelx/triggerServiceDemo/proto"
+	"github.com/pvelx/trigger-service-demo/proto"
 	"github.com/pvelx/triggerhook/contracts"
 	"github.com/pvelx/triggerhook/domain"
 )

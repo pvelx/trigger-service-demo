@@ -1,4 +1,4 @@
-module github.com/pvelx/triggerServiceDemo
+module github.com/pvelx/trigger-service-demo
 
 go 1.15
 

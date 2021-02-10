@@ -16,7 +16,7 @@ COPY . .
 RUN go mod download
 RUN go mod verify
 
-RUN GOOS=linux GOARCH=amd64 go build -o /app/main github.com/pvelx/triggerServiceDemo
+RUN GOOS=linux GOARCH=amd64 go build -o /app/main github.com/pvelx/trigger-service-demo
 
 FROM alpine
 COPY --from=builder /etc/passwd /etc/passwd
