@@ -8,7 +8,7 @@ The microservice implements the deferred task execution mechanism.
 - The microservice interface uses the GRPC protocol.
 - The execution trigger is sent asynchronously via RabbitMQ.
 
-![microservice scheme](./scheme-v2.jpg)
+![microservice scheme](./scheme-v3.jpg)
 
 ### Build GRPC server
 After changing [task.proto](proto/task.proto), you need to run:
