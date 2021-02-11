@@ -1,19 +1,17 @@
-Микросервис является частью приложения [Message](https://github.com/pvelx/k8s-message-demo).
+The microservice is part of the application [Message](https://github.com/pvelx/k8s-message-demo).
 ---
-Микросервис реализует механизм отложенного выполенения задач. 
+The microservice implements the deferred task execution mechanism.
 
-- Построен на базе библиотеки [Trigger Hook](https://github.com/pvelx/triggerhook) для ее демонстрации.
-- Испольльзует MySql в качестве постоянного хранилища
-- Отсылает [метрики](https://github.com/pvelx/triggerhook#%D0%BF%D1%80%D0%B8%D0%BD%D1%86%D0%B8%D0%BF-%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D1%8B)
-в InfluxDb.
-- Интерфейс микросервиса использует GRPC протокол.
-- Триггер на выполнение отправляется асинхронно через RabbitMq
+- Built on the basis of the library [Trigger Hook](https://github.com/pvelx/triggerhook) for its demonstration.
+- Uses MySQL as a persistent storage.
+- Sends [metrics](https://github.com/pvelx/triggerhook#principle-of-operation) to the InfluxDb.
+- The microservice interface uses the GRPC protocol.
+- The execution trigger is sent asynchronously via RabbitMQ.
 
-
-![microservice scheme](./scheme.png)
+![microservice scheme](./scheme-v2.jpg)
 
 ### Build GRPC server
-После изменения [task.proto](proto/task.proto) нужно выполнить:
+After changing [task.proto](proto/task.proto), you need to run:
 ```bash
 make gen_proto
 ```
