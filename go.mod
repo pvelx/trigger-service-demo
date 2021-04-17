@@ -5,9 +5,8 @@ go 1.15
 require (
 	github.com/golang/protobuf v1.4.3
 	github.com/influxdata/influxdb v1.8.4
-	github.com/pvelx/triggerhook v1.0.0-alpha
+	github.com/pvelx/triggerhook v1.1.0
 	github.com/streadway/amqp v1.0.0
-	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
 	golang.org/x/net v0.0.0-20210119194325-5f4716e94777 // indirect
 	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c // indirect
 	golang.org/x/text v0.3.5 // indirect

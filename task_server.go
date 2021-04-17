@@ -14,7 +14,7 @@ func NewTaskServer(tasksDeferredService contracts.TriggerHookInterface) proto.Ta
 }
 
 type taskServer struct {
-	proto.UnimplementedTaskServer
+	proto.TaskServer
 	tasksDeferredService contracts.TriggerHookInterface
 }
 
